@@ -1,0 +1,22 @@
+[[source]]
+name = "pypi"
+url = "https://jfrog.ops.ecsbr.net/artifactory/api/pypi/pypi/simple"
+verify_ssl = false
+
+[[source]]
+name = "jfrog"
+url = "https://jfrog.ops.ecsbr.net/artifactory/api/pypi/pypi-local/simple/"
+verify_ssl = false
+
+[packages]
+fastapi = "*"
+requests = "*"
+uvicorn = "*"
+ujson = "*"
+aiohttp = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.13"
+python_full_version = "3.13.7"
