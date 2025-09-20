@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from src.enums.symbol import SymbolEnum
 
 
@@ -5,12 +7,19 @@ class Transaction:
     def __init__(self, **kwargs):
         self.id = kwargs['id']
         self.round_id = kwargs['round_id']
-        self.date_time = kwargs['date_time']
         self.side = kwargs['side']
+
         self.symbol = SymbolEnum(kwargs['symbol'])
-        self.price = kwargs['price']
-        self.qty = kwargs['qty']
-        self.amount = kwargs['amount']
-        self.commission = kwargs['commission']
-        self.commission_type = SymbolEnum(kwargs['commission_type'])
-        self.total = kwargs['total']
+        self.order_id = kwargs['orderId']
+        self.transaction_time = datetime.fromtimestamp(kwargs['transactTime'] / 1000)
+
+        self.order_qty = float(kwargs['executedQty'])
+        self.order_amount = float(kwargs['cummulativeQuoteQty'])
+
+
+        self.price = float(kwargs['price'])
+        self.commission = float(kwargs['commission'])
+        self.commision_symbol = kwargs['commissionAsset']
+
+        self.qty = self.order_qty - self.commission
+        self.total = self.order_amount
