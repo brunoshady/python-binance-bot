@@ -1,0 +1,31 @@
+{
+    "symbol":"PEPEBRL",
+    "orderId":111075203,
+    "orderListId":-1,
+    "clientOrderId":"oMTfICVk1MKcaOqAhzAvcX",
+    "transactTime":1758347004330,
+    "price":"0.00000000",
+    "origQty":"190114.00",
+    "executedQty":"190114.00",
+    "origQuoteOrderQty":"0.00000000",
+    "cummulativeQuoteQty":"11.01140288",
+    "status":"FILLED",
+    "timeInForce":"GTC",
+    "type":"MARKET",
+    "side":"BUY",
+    "workingTime":1758347004330,
+    "fills":[
+        {
+            "price":"0.00005792",
+            "qty":"190114.00",
+            "commission":"190.11",
+            "commissionAsset":"PEPE",
+            "tradeId":1440387
+        }
+    ],
+    "selfTradePreventionMode":"EXPIRE_MAKER"
+}
+
+//-> saiu 11.01140288 BRL
+//-> entrou 190114.00 PEPE
+//> saiu 190.11 de comissao PEPE

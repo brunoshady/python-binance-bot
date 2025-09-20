@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from src.enums.side import SideEnum
 from src.enums.symbol import SymbolEnum
 from src.models.rounds import Round
@@ -24,21 +22,17 @@ class TransactionsService(metaclass=Singleton):
         return max(transactions, key=lambda t: t.id)
 
     def new_transaction(self, side: SideEnum, current_round: Round, transaction_data: dict):
-        symbol = current_round.symbol
+        symbol = SymbolEnum(transaction_data['symbol'])
         transactions = self.get_transactions(symbol, current_round.id)
         max_id = max((t.id for t in transactions), default=0)
 
         transaction_data['id'] = max_id + 1
         transaction_data['round_id'] = current_round.id
-        transaction_data['date_time'] = datetime.now()
         transaction_data['side'] = side.value
-        transaction_data['symbol'] = symbol
+
         transaction_data['price'] = transaction_data['fills'][0]['price']
-        transaction_data['qty'] = transaction_data['fills'][0]['qty']
-        transaction_data['amount'] = transaction_data['fills'][0]['qty'] * transaction_data['fills'][0]['price']
         transaction_data['commission'] = transaction_data['fills'][0]['commission']
-        transaction_data['commission_type'] = transaction_data['fills'][0]['commissionAsset']
-        transaction_data['total'] = transaction_data['amount']
+        transaction_data['commissionAsset'] = transaction_data['fills'][0]['commissionAsset']
 
         transaction = Transaction(**transaction_data)
         self.repository.insert_transaction(transaction)

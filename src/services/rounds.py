@@ -16,9 +16,13 @@ class RoundsService(metaclass=Singleton):
 
         for r in _rounds:
             r.transactions = self.repository.select_transactions(r.symbol, r.id)
-            r.last_transaction_datetime = r.transactions[-1].date_time
 
-            _amount_sum = sum([t.amount for t in r.transactions if t.side == SideEnum.BUY.value])
+            if not r.transactions:
+                continue
+
+            r.last_transaction_datetime = r.transactions[-1].transaction_time
+
+            _amount_sum = sum([t.total for t in r.transactions if t.side == SideEnum.BUY.value])
             _qty_sum = sum([t.qty for t in r.transactions if t.side == SideEnum.BUY.value])
             r.total_qty = _qty_sum
             r.total_amount = _amount_sum

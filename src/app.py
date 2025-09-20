@@ -73,7 +73,9 @@ async def index():
 
 @app.get("/{symbol}/rounds", response_model=List[Round], response_class=UJSONResponse)
 async def get_rounds(symbol: str):
-    return RoundsService().get_rounds(SymbolEnum(symbol.upper()))
+    _rounds = RoundsService().get_rounds(SymbolEnum(symbol.upper()))
+    _rounds.reverse()
+    return _rounds
 
 
 @app.get("/{symbol}/rounds/{round_id}", response_model=Optional[Round], response_class=UJSONResponse)
@@ -88,8 +90,9 @@ if __name__ == "__main__":
     uvicorn.run(
         "app:app",
         host="127.0.0.1",
-        port=8080,
-        log_level="debug",
+        port=9090,
+        log_level="warning",
+        use_colors=True,
         access_log=True,
         workers=1,
         timeout_keep_alive=50,

@@ -14,6 +14,7 @@ requests = "*"
 uvicorn = "*"
 ujson = "*"
 aiohttp = "*"
+binance-connector = "*"
 
 [dev-packages]
 
