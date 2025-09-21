@@ -71,8 +71,10 @@ class BinanceService(metaclass=Singleton):
 
         except ClientError as e:
             print(e.error_message)
+            return None
         except Exception as e:
             print(e)
+            return None
 
         qty = self.settings[symbol]['amount'] / self.symbols[symbol]
 
@@ -119,8 +121,10 @@ class BinanceService(metaclass=Singleton):
             )
         except ClientError as e:
             print(e.error_message)
+            return None
         except Exception as e:
             print(e)
+            return None
 
         order_total = qty * self.symbols[symbol]
         comission = order_total * 0.01

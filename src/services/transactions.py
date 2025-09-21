@@ -22,6 +22,9 @@ class TransactionsService(metaclass=Singleton):
         return max(transactions, key=lambda t: t.id)
 
     def new_transaction(self, side: SideEnum, current_round: Round, transaction_data: dict):
+        if not transaction_data:
+            return
+
         symbol = SymbolEnum(transaction_data['symbol'])
         transactions = self.get_transactions(symbol, current_round.id)
         max_id = max((t.id for t in transactions), default=0)
