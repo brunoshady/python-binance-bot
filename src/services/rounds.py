@@ -67,7 +67,7 @@ class RoundsService(metaclass=Singleton):
     def close_round(self, current_round):
         _round = self.get_round(current_round.symbol, current_round.id)
 
-        _buy_amount = sum([t.amount for t in _round.transactions if t.side == SideEnum.BUY.value])
-        _sell_amount = sum([t.amount for t in _round.transactions if t.side == SideEnum.SELL.value])
+        _buy_amount = sum([t.total for t in _round.transactions if t.side == SideEnum.BUY.value])
+        _sell_amount = sum([t.total for t in _round.transactions if t.side == SideEnum.SELL.value])
 
         _round.result = _sell_amount - _buy_amount

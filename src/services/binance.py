@@ -111,41 +111,46 @@ class BinanceService(metaclass=Singleton):
         qty = sum([t.qty for t in current_round.transactions])
 
         try:
-            response = self.client.new_order(
-                symbol=symbol,
+            response = self.client.new_order_test(
+                symbol=symbol.value,
                 side="SELL",
                 type="MARKET",
-                quantity=qty
+                quantity=f"{qty:.0f}"
             )
         except ClientError as e:
             print(e.error_message)
         except Exception as e:
             print(e)
 
+        order_total = qty * self.symbols[symbol]
+        comission = order_total * 0.01
+
         response = {
-            "symbol": symbol.value,
-            "orderId": 28,
-            "orderListId": -1,  # Unless it's part of an order list, value will be -1
-            "clientOrderId": "6gCrw2kRUAF9CvJDGP16IP",
-            "transactTime": 1507725176595,
-            "price": self.symbols[symbol],
-            "origQty": qty,
-            "executedQty": "10.00000000",
-            "origQuoteOrderQty": "0.000000",
-            "cummulativeQuoteQty": "10.00000000",
-            "status": "FILLED",
-            "timeInForce": "GTC",
-            "type": "MARKET",
-            "side": "SELL",
-            "workingTime": 1507725176595,
-            "selfTradePreventionMode": "NONE",
-            "fills": [
+            "clientOrderId":"NVNWsWaCfVQ5utp5Ba9waV",
+            "cummulativeQuoteQty":f"{order_total - comission:.8f}",
+            "executedQty":f"{qty:.0f}",
+            "fills":[
                 {
-                    "price": self.symbols[symbol],
-                    "qty": qty,
-                    "commission": qty * 0.01,
-                    "commissionAsset": symbol.value,
-                }]
+                    "commission":f"{comission:.8f}",
+                    "commissionAsset":"BRL",
+                    "price":f"{self.symbols[symbol]:.8f}",
+                    "qty":f"{qty:.0f}",
+                    "tradeId":1441347
+                }
+            ],
+            "orderId":111155573,
+            "orderListId":-1,
+            "origQty":"189923.00",
+            "origQuoteOrderQty":"0.00000000",
+            "price":"0.00000000",
+            "selfTradePreventionMode":"EXPIRE_MAKER",
+            "side":"SELL",
+            "status":"FILLED",
+            "symbol":symbol.value,
+            "timeInForce":"GTC",
+            "transactTime":int(time.time()) * 1000,
+            "type":"MARKET",
+            "workingTime":1758420451610
         }
 
         return response

@@ -21,5 +21,10 @@ class Transaction:
         self.commission = float(kwargs['commission'])
         self.commision_symbol = kwargs['commissionAsset']
 
-        self.qty = self.order_qty - self.commission
+        if self.side == 'BUY':
+            self.qty = self.order_qty - self.commission
+
+        if self.side == 'SELL':
+            self.qty = self.order_qty
+
         self.total = self.order_amount
