@@ -1,0 +1,31 @@
+{
+    "clientOrderId":"NVNWsWaCfVQ5utp5Ba9waV",
+    "cummulativeQuoteQty":"10.86929329",
+    "executedQty":"189923.00",
+    "fills":[
+        {
+            "commission":"0.01086929",
+            "commissionAsset":"BRL",
+            "price":"0.00005723",
+            "qty":"189923.00",
+            "tradeId":1441347
+        }
+    ],
+    "orderId":111155573,
+    "orderListId":-1,
+    "origQty":"189923.00",
+    "origQuoteOrderQty":"0.00000000",
+    "price":"0.00000000",
+    "selfTradePreventionMode":"EXPIRE_MAKER",
+    "side":"SELL",
+    "status":"FILLED",
+    "symbol":"PEPEBRL",
+    "timeInForce":"GTC",
+    "transactTime":1758420451610,
+    "type":"MARKET",
+    "workingTime":1758420451610
+}
+
+// -> saiu 189923.00 PEPE
+// --> entrou 10.86929329 BRL
+// --> ja descontado comissao 0.01086929
