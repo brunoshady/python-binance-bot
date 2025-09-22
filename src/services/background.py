@@ -6,6 +6,7 @@ from src.enums.symbol import SymbolEnum
 from src.services.binance import BinanceService
 from src.services.rounds import RoundsService
 from src.services.transactions import TransactionsService
+from src.settings import SETTINGS
 
 
 def start_background_loop():
@@ -27,7 +28,7 @@ async def brackground_worker():
                 for symbol in SymbolEnum:
                     await binance_service.get_price(symbol)
 
-                for symbol in binance_service.settings.keys():
+                for symbol in SETTINGS.keys():
                     current_round = rounds_service.get_current_round(symbol, True)
                     current_transaction = transactions_service.get_last_transaction(symbol, current_round.id)
 
@@ -39,9 +40,12 @@ async def brackground_worker():
                     last_price = current_round.last_price
                     target_price = current_round.target_price
 
+                    if not last_price or not target_price:
+                        continue
+
                     # Verificar se o preço atual está abaixo do avg - desvio
                     # Se estiver, comprar mais
-                    timedelta = binance_service.settings[symbol]['timedelta']
+                    timedelta = SETTINGS[symbol]['timedelta']
                     if last_price < target_price and (current_round.last_transaction_datetime + datetime.timedelta(minutes=timedelta)) < datetime.datetime.now():
                         response = await binance_service.buy(current_round)
                         transactions_service.new_transaction(SideEnum.BUY, current_round, response)

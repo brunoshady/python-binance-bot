@@ -15,6 +15,7 @@ uvicorn = "*"
 ujson = "*"
 aiohttp = "*"
 binance-connector = "*"
+sqlalchemy = "*"
 
 [dev-packages]
 

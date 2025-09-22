@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from src.enums.side import SideEnum
 from src.enums.symbol import SymbolEnum
 from src.models.rounds import Round
@@ -10,32 +12,41 @@ class TransactionsService(metaclass=Singleton):
     def __init__(self):
         self.repository = RepositoryService()
 
-    def get_transactions(self, symbol: SymbolEnum, round_id) -> list[Transaction]:
-        return self.repository.select_transactions(symbol, round_id)
-
     def get_last_transaction(self, symbol: SymbolEnum, round_id) -> Transaction | None:
-        transactions = self.get_transactions(symbol, round_id)
+        _round = self.repository.select_round(symbol, round_id)
 
-        if not transactions:
+        if not _round.transactions:
             return None
 
-        return max(transactions, key=lambda t: t.id)
+        return max(_round.transactions, key=lambda t: t.id)
 
     def new_transaction(self, side: SideEnum, current_round: Round, transaction_data: dict):
         if not transaction_data:
-            return
+            return None
 
-        symbol = SymbolEnum(transaction_data['symbol'])
-        transactions = self.get_transactions(symbol, current_round.id)
-        max_id = max((t.id for t in transactions), default=0)
+        current_round = self.repository.select_round(current_round.symbol, current_round.id)
+        max_id = max((t.id for t in current_round.transactions), default=0)
 
-        transaction_data['id'] = max_id + 1
-        transaction_data['round_id'] = current_round.id
-        transaction_data['side'] = side.value
+        new_transaction = Transaction(
+            id=max_id + 1,
+            round_id=current_round.id,
+            side=side.value,
+            symbol=current_round.symbol,
+            order_id=transaction_data['orderId'],
+            transaction_time=datetime.fromtimestamp(transaction_data['transactTime'] / 1000),
+            order_qty=float(transaction_data['executedQty']),
+            order_amount=float(transaction_data['cummulativeQuoteQty']),
+            price=float(transaction_data['fills'][0]['price']),
+            commission=float(transaction_data['fills'][0]['commission']),
+            commision_symbol=transaction_data['fills'][0]['commissionAsset'],
+            # qty=float(transaction_data['executedQty']) - (float(transaction_data['fills'][0]['commission']) if side == SideEnum.BUY else 0),
+            total=float(transaction_data['cummulativeQuoteQty'])
+        )
 
-        transaction_data['price'] = transaction_data['fills'][0]['price']
-        transaction_data['commission'] = transaction_data['fills'][0]['commission']
-        transaction_data['commissionAsset'] = transaction_data['fills'][0]['commissionAsset']
+        if side == SideEnum.BUY:
+            new_transaction.qty = new_transaction.order_qty - new_transaction.commission
 
-        transaction = Transaction(**transaction_data)
-        self.repository.insert_transaction(transaction)
+        if side == SideEnum.SELL:
+            new_transaction.qty = new_transaction.order_qty
+
+        return self.repository.update_round(current_round, new_transaction)

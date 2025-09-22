@@ -1,33 +1,68 @@
+from sqlalchemy import func
+from sqlalchemy.orm import joinedload
+
+from src.database import SessionLocal, Base, engine
 from src.enums.symbol import SymbolEnum
 from src.models.rounds import Round
 from src.models.transactions import Transaction
 from src.utils.singleton import Singleton
 
+Base.metadata.create_all(bind=engine)
 
+
+# noinspection SqlNoDataSourceInspection,SqlDialectInspection,PyMethodMayBeStatic
 class RepositoryService(metaclass=Singleton):
     def __init__(self):
-        self.rounds = []
-        self.transactions = []
+        pass
 
-    def insert_round(self, _round: Round):
-        self.rounds.append(_round)
+    def insert_round(self, data: Round):
+        db = SessionLocal()
 
-    def select_rounds(self, symbol: SymbolEnum | None) -> list[Round]:
-        rounds = self.rounds
+        # Verifica se já existe um Round com result = None para o símbolo
+        existing = db.query(Round).filter(Round.symbol == data.symbol, Round.result == None).first()
 
-        if symbol:
-            rounds = [r for r in rounds if r.symbol == symbol]
+        if existing:
+            raise Exception(f"Já existe um Round com result = None para o símbolo {data.symbol} (id={existing.id})")
 
-        for _round in rounds:
-            _round.transactions = [t for t in self.transactions if t.round_id == _round.id]
+        max_id = db.query(func.max(Round.id)).filter(Round.symbol == data.symbol).scalar()
 
-        return rounds
+        data.id = (max_id or 0) + 1
 
-    def insert_transaction(self, transaction: Transaction):
-        self.transactions.append(transaction)
+        db.add(data)
+        db.commit()
+        db.refresh(data)
+        db.close()
+        return data
 
-    def select_transaction(self, symbol: SymbolEnum, _id: int) -> Transaction | None:
-        return next((t for t in self.transactions if t.id == _id and t.symbol == symbol), None)
+    def update_round(self, data: Round, new_transaction: Transaction | None):
+        db = SessionLocal()
+        data = db.query(Round).filter(Round.symbol == data.symbol, Round.id == data.id).first()
 
-    def select_transactions(self, symbol: SymbolEnum, round_id: int) -> list[Transaction]:
-        return [t for t in self.transactions if t.round_id == round_id and t.symbol == symbol]
+        if new_transaction:
+            data.transactions.append(new_transaction)
+
+        db.merge(data)
+        db.commit()
+        db.refresh(data)
+        db.close()
+        return data
+
+    def select_round(self, symbol: SymbolEnum, round_id: int) -> Round | None:
+        db = SessionLocal()
+        result = (db.query(Round)
+                  .options(joinedload(Round.transactions))
+                  .filter(Round.symbol == symbol, Round.id == round_id)
+                  .first())
+        db.close()
+        return result
+
+    def select_rounds(self, symbol: SymbolEnum) -> list[Round]:
+        db = SessionLocal()
+        result = (db.query(Round)
+                  .options(joinedload(Round.transactions))
+                  .filter(Round.symbol == symbol)
+                  .order_by(Round.id.desc())
+                  .all())
+        db.close()
+        return result
+

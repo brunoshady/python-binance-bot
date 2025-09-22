@@ -7,6 +7,7 @@ from binance.spot import Spot
 
 from src.enums.symbol import SymbolEnum
 from src.models.rounds import Round
+from src.settings import SETTINGS
 from src.utils.singleton import Singleton
 
 API_KEY = os.getenv("API_KEY")
@@ -17,23 +18,6 @@ class BinanceService(metaclass=Singleton):
         self.client = Spot(api_key=API_KEY, api_secret=API_SECRET)
         self.symbols = {}
         self.symbols_str = {}
-        # Abaixo definimos quais pares trabalhar e suas configs
-        self.settings = {
-            SymbolEnum.BTCBRL: {
-                'amount': 50,
-                'target_percentage': 1.1,
-                'take_profit_percentage': 2,
-                'trailing_stop_percentage': 0.5,
-                'timedelta': 5
-            },
-            SymbolEnum.PEPEUSDT: {
-                'amount': 11,
-                'target_percentage': 1.1,
-                'take_profit_percentage': 3,
-                'trailing_stop_percentage': 1,
-                'timedelta': 1
-            }
-        }
 
     async def get_price(self, symbol: SymbolEnum):
         if symbol in (SymbolEnum.BRL, SymbolEnum.PEPE, SymbolEnum.BTC):
@@ -43,9 +27,11 @@ class BinanceService(metaclass=Singleton):
             response = self.client.ticker_24hr(symbol=symbol.value)
         except ClientError as e:
             print(e.error_message)
+            await asyncio.sleep(1)
             return
         except Exception as e:
             print(e)
+            await asyncio.sleep(1)
             return
 
         self.symbols[symbol] = float(response["lastPrice"])
@@ -53,6 +39,11 @@ class BinanceService(metaclass=Singleton):
 
         if symbol in (SymbolEnum.PEPEBRL, SymbolEnum.PEPEUSDT):
             self.symbols_str[symbol] = f'{float(response["lastPrice"]):.8f} ({float(response["priceChangePercent"]):.2f}%)'
+
+    async def get_exchange_info(self):
+        symbols = [SymbolEnum.PEPEBRL.value, SymbolEnum.PEPEUSDT.value, SymbolEnum.BTCBRL.value, SymbolEnum.BTCUSDT.value]
+        response = self.client.exchange_info(symbols=symbols)
+        print(response)
 
     async def buy(self, current_round: Round) -> dict | None:
         symbol = current_round.symbol
@@ -62,7 +53,7 @@ class BinanceService(metaclass=Singleton):
                 symbol=symbol.value,
                 side="BUY",
                 type="MARKET",
-                quoteOrderQty=self.settings[symbol]['amount'],
+                quoteOrderQty=SETTINGS[symbol]['amount'],
                 newOrderRespType="FULL",
             )
 
@@ -76,7 +67,7 @@ class BinanceService(metaclass=Singleton):
             print(e)
             return None
 
-        qty = self.settings[symbol]['amount'] / self.symbols[symbol]
+        qty = SETTINGS[symbol]['amount'] / self.symbols[symbol]
 
         response = {
             "symbol":symbol.value,
