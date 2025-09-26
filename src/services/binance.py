@@ -1,7 +1,10 @@
 import asyncio
 import os
+import random
 import time
+from datetime import datetime
 
+import aiohttp
 from binance.error import ClientError
 from binance.spot import Spot
 
@@ -34,11 +37,17 @@ class BinanceService(metaclass=Singleton):
             await asyncio.sleep(1)
             return
 
+        if float(response["lastPrice"]) == self.symbols.get(symbol):
+            return
+
+        current_time = datetime.now().strftime("%H:%M:%S")
         self.symbols[symbol] = float(response["lastPrice"])
-        self.symbols_str[symbol] = f'{float(response["lastPrice"]):.2f} ({float(response["priceChangePercent"]):.2f}%)'
+        self.symbols_str[symbol] = (f'{float(response["lastPrice"]):.2f} '
+                                    f'({float(response["priceChangePercent"]):.2f}%) - {current_time}')
 
         if symbol in (SymbolEnum.PEPEBRL, SymbolEnum.PEPEUSDT):
-            self.symbols_str[symbol] = f'{float(response["lastPrice"]):.8f} ({float(response["priceChangePercent"]):.2f}%)'
+            self.symbols_str[symbol] = (f'{float(response["lastPrice"]):.8f} '
+                                        f'({float(response["priceChangePercent"]):.2f}%) - {current_time}')
 
     async def get_exchange_info(self):
         symbols = [SymbolEnum.PEPEBRL.value, SymbolEnum.PEPEUSDT.value, SymbolEnum.BTCBRL.value, SymbolEnum.BTCUSDT.value]
@@ -71,7 +80,7 @@ class BinanceService(metaclass=Singleton):
 
         response = {
             "symbol":symbol.value,
-            "orderId":111075203,
+            "orderId": random.randint(111000000, 111075203),
             "orderListId":-1,
             "clientOrderId":"oMTfICVk1MKcaOqAhzAvcX",
             "transactTime":int(time.time()) * 1000,
@@ -102,13 +111,17 @@ class BinanceService(metaclass=Singleton):
     async def sell(self, current_round: Round):
         symbol = current_round.symbol
         qty = sum([t.qty for t in current_round.transactions])
+        amount = qty * self.symbols[symbol]
 
         try:
+            # await self.get_exchange_info()
             response = self.client.new_order_test(
                 symbol=symbol.value,
                 side="SELL",
                 type="MARKET",
-                quantity=f"{qty:.0f}"
+                # quantity=f"{qty:.2f}"
+                quoteOrderQty=f"{amount:.2f}",
+                newOrderRespType="FULL",
             )
         except ClientError as e:
             print(e.error_message)
@@ -133,7 +146,7 @@ class BinanceService(metaclass=Singleton):
                     "tradeId":1441347
                 }
             ],
-            "orderId":111155573,
+            "orderId":random.randint(111000000, 111075203),
             "orderListId":-1,
             "origQty":"189923.00",
             "origQuoteOrderQty":"0.00000000",

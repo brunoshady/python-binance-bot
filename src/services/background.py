@@ -5,7 +5,6 @@ from src.enums.side import SideEnum
 from src.enums.symbol import SymbolEnum
 from src.services.binance import BinanceService
 from src.services.rounds import RoundsService
-from src.services.transactions import TransactionsService
 from src.settings import SETTINGS
 
 
@@ -20,7 +19,6 @@ async def brackground_worker():
 
     binance_service = BinanceService()
     rounds_service = RoundsService()
-    transactions_service = TransactionsService()
 
     while True:
         try:
@@ -29,13 +27,14 @@ async def brackground_worker():
                     await binance_service.get_price(symbol)
 
                 for symbol in SETTINGS.keys():
-                    current_round = rounds_service.get_current_round(symbol, True)
-                    current_transaction = transactions_service.get_last_transaction(symbol, current_round.id)
+                    current_round = rounds_service.get_or_create_current_round(symbol)
+                    current_transaction = current_round.transactions[-1] if current_round.transactions else None
 
                     if not current_transaction:
                         response = await binance_service.buy(current_round)
-                        transactions_service.new_transaction(SideEnum.BUY, current_round, response)
-                        current_round = rounds_service.get_current_round(symbol)
+                        rounds_service.add_transaction(current_round, SideEnum.BUY, response)
+
+                    rounds_service.update_values(current_round)
 
                     last_price = current_round.last_price
                     target_price = current_round.target_price
@@ -48,7 +47,7 @@ async def brackground_worker():
                     timedelta = SETTINGS[symbol]['timedelta']
                     if last_price < target_price and (current_round.last_transaction_datetime + datetime.timedelta(minutes=timedelta)) < datetime.datetime.now():
                         response = await binance_service.buy(current_round)
-                        transactions_service.new_transaction(SideEnum.BUY, current_round, response)
+                        rounds_service.add_transaction(current_round, SideEnum.BUY, response)
 
                     # Verificar se o preço atual está acima do avg + take profit
                     # Se estiver, vender tudo
@@ -56,7 +55,7 @@ async def brackground_worker():
                     trailing_stop_price = current_round.trailing_stop_price
                     if trailing_stop_price and last_price <= trailing_stop_price:
                         response = await binance_service.sell(current_round)
-                        transactions_service.new_transaction(SideEnum.SELL, current_round, response)
+                        rounds_service.add_transaction(current_round, SideEnum.BUY, response)
                         rounds_service.close_round(current_round)
 
                 await asyncio.sleep(0.5)

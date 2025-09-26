@@ -13,6 +13,7 @@ from src.schemas.status import Status
 from src.services.background import start_background_loop
 from src.services.binance import BinanceService
 from src.services.rounds import RoundsService
+from src.settings import SETTINGS
 
 
 @asynccontextmanager
@@ -25,6 +26,7 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+round_service = RoundsService()
 
 
 # GET /{symbol}/rounds              → Lista de rounds para um símbolo
@@ -35,14 +37,12 @@ app = FastAPI(lifespan=lifespan)
 @app.get("/status", response_model=Status, response_class=UJSONResponse)
 async def get_status():
     rounds = []
-    for symbol in SymbolEnum:
-        if symbol == SymbolEnum.BRL:
-            continue
+    for symbol in SETTINGS.keys():
+        current_round = round_service.get_current_round(symbol)
 
-        _round = RoundsService().get_current_round(symbol)
-
-        if _round:
-            rounds.append(_round)
+        if current_round:
+            round_service.update_values(current_round)
+            rounds.append(current_round)
 
     return {'symbols': BinanceService().symbols_str, 'rounds': rounds}
 
@@ -73,17 +73,17 @@ async def index():
 
 @app.get("/{symbol}/rounds", response_model=List[Round], response_class=UJSONResponse)
 async def get_rounds(symbol: str):
-    _rounds = RoundsService().get_rounds(SymbolEnum(symbol.upper()))
-    _rounds.reverse()
-    return _rounds
+    rounds = round_service.get_rounds(SymbolEnum(symbol.upper()))
+    rounds.reverse()
+    return rounds
 
 
 @app.get("/{symbol}/rounds/{round_id}", response_model=Optional[Round], response_class=UJSONResponse)
 async def get_round(round_id: int | str, symbol: str):
     if round_id == "current":
-        return RoundsService().get_current_round(SymbolEnum(symbol.upper()))
+        return round_service.get_current_round(SymbolEnum(symbol.upper()))
 
-    return RoundsService().get_round(SymbolEnum(symbol.upper()), int(round_id))
+    return round_service.get_round(SymbolEnum(symbol.upper()), int(round_id))
 
 
 if __name__ == "__main__":
