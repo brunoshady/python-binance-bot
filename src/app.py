@@ -8,7 +8,7 @@ from fastapi.responses import UJSONResponse
 from starlette.responses import HTMLResponse
 
 from src.enums.symbol import SymbolEnum
-from src.schemas.rounds import Round
+from src.schemas.rounds import Round, RoundWithTransactions
 from src.schemas.status import Status
 from src.services.background import start_background_loop
 from src.services.binance import BinanceService
@@ -74,16 +74,24 @@ async def index():
 @app.get("/{symbol}/rounds", response_model=List[Round], response_class=UJSONResponse)
 async def get_rounds(symbol: str):
     rounds = round_service.get_rounds(SymbolEnum(symbol.upper()))
+
+    for _round in rounds:
+        round_service.update_values(_round)
+
     rounds.reverse()
     return rounds
 
 
-@app.get("/{symbol}/rounds/{round_id}", response_model=Optional[Round], response_class=UJSONResponse)
+@app.get("/{symbol}/rounds/{round_id}", response_model=Optional[RoundWithTransactions], response_class=UJSONResponse)
 async def get_round(round_id: int | str, symbol: str):
     if round_id == "current":
-        return round_service.get_current_round(SymbolEnum(symbol.upper()))
+        current_round = round_service.get_current_round(SymbolEnum(symbol.upper()))
+        round_service.update_values(current_round)
+        return current_round
 
-    return round_service.get_round(SymbolEnum(symbol.upper()), int(round_id))
+    _round = round_service.get_round(SymbolEnum(symbol.upper()), int(round_id))
+    round_service.update_values(_round)
+    return _round
 
 
 if __name__ == "__main__":

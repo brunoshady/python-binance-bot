@@ -11,15 +11,14 @@ class Round(BaseModel):
     id: int
     symbol: SymbolEnum
     result: float | None
-    avg_price: float | None = Field(serialization_alias="avgPrice")
-    target_price: float | None = Field(serialization_alias="targetPrice")
-    take_profit_price: float | None = Field(serialization_alias="takeProfitPrice")
-    trailing_stop_price: float | None = Field(serialization_alias="trailingStopPrice")
-    last_price: float | None = Field(serialization_alias="lastPrice")
-    last_transaction_datetime: datetime | None = Field(serialization_alias="lastTransactionDateTime")
-    total_qty: float | None = Field(serialization_alias="totalQty")
-    total_amount: float | None = Field(serialization_alias="totalAmount")
-    transactions: List[Transaction] = []
+    avg_price: float | None = Field(default=None, serialization_alias="avgPrice")
+    target_price: float | None = Field(default=None, serialization_alias="targetPrice")
+    take_profit_price: float | None = Field(default=None, serialization_alias="takeProfitPrice")
+    trailing_stop_price: float | None = Field(default=None, serialization_alias="trailingStopPrice")
+    last_price: float | None = Field(default=None, serialization_alias="lastPrice")
+    last_transaction_datetime: datetime | None = Field(default=None, serialization_alias="lastTransactionDateTime")
+    total_qty: float | None = Field(default=None, serialization_alias="totalQty")
+    total_amount: float | None = Field(default=None, serialization_alias="totalAmount")
 
     class Config:
         validate_by_name = True
@@ -81,3 +80,7 @@ class Round(BaseModel):
             return None
 
         return last_transaction_datetime.strftime("%Y-%m-%d %H:%M:%S")
+
+
+class RoundWithTransactions(Round):
+    transactions: List[Transaction] = []

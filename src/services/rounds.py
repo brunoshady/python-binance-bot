@@ -31,10 +31,15 @@ class RoundsService:
     def get_rounds(self, symbol: SymbolEnum) -> list[Round]:
         return self.repository.select_all_by_symbol(symbol)
 
-    def update_values(self, current_round):
+    def update_values(self, current_round: Round):
         current_round.last_price = self.binance.symbols.get(current_round.symbol) or 0
-        current_round.total_qty = sum(transaction.qty for transaction in current_round.transactions)
-        current_round.total_amount = sum(transaction.total for transaction in current_round.transactions)
+        sell_total = sum([transaction.total for transaction in current_round.transactions if transaction.side == SideEnum.SELL.value])
+
+        if sell_total:
+            current_round.last_price = [transaction for transaction in current_round.transactions if transaction.side == SideEnum.SELL.value][-1].price
+
+        current_round.total_qty = sum(transaction.qty for transaction in current_round.transactions if transaction.side == SideEnum.BUY.value)
+        current_round.total_amount = sum(transaction.total for transaction in current_round.transactions if transaction.side == SideEnum.BUY.value)
         current_round.avg_price = current_round.total_amount / current_round.total_qty if current_round.total_qty else None
 
         target_percentage = SETTINGS[current_round.symbol]['target_percentage']
@@ -54,6 +59,10 @@ class RoundsService:
 
             if trailing_stop_price > current_round.trailing_stop_price:
                 current_round.trailing_stop_price = trailing_stop_price
+
+                if current_round.result:
+                    return
+
                 self.repository.update(current_round)
 
     def add_transaction(self, current_round: Round, side: SideEnum, response: dict) -> Round:

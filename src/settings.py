@@ -14,6 +14,6 @@ SETTINGS = {
         'target_percentage': 1.5,
         'take_profit_percentage': 3,
         'trailing_stop_percentage': 1,
-        'timedelta': 1
+        'timedelta': 15
     }
 }
