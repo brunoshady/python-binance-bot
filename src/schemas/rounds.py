@@ -14,6 +14,7 @@ class Round(BaseModel):
     avg_price: float | None = Field(default=None, serialization_alias="avgPrice")
     target_price: float | None = Field(default=None, serialization_alias="targetPrice")
     take_profit_price: float | None = Field(default=None, serialization_alias="takeProfitPrice")
+    current_profit: float | None = Field(default=None, serialization_alias="currentProfit")
     trailing_stop_price: float | None = Field(default=None, serialization_alias="trailingStopPrice")
     last_price: float | None = Field(default=None, serialization_alias="lastPrice")
     last_transaction_datetime: datetime | None = Field(default=None, serialization_alias="lastTransactionDateTime")
@@ -44,6 +45,10 @@ class Round(BaseModel):
             return f"{take_profit_price:,.8f}" if take_profit_price else None
 
         return f"{take_profit_price:,.2f}" if take_profit_price else None
+
+    @field_serializer('current_profit')
+    def serialize_current_profit(self, current_profit: float, _info) -> str:
+        return f"{current_profit:,.2f}" if current_profit else None
 
     @field_serializer('trailing_stop_price')
     def serialize_trailing_stop_price(self, trailing_stop_price: float, _info) -> str | None:

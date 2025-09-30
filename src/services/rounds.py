@@ -42,6 +42,10 @@ class RoundsService:
         current_round.total_amount = sum(transaction.total for transaction in current_round.transactions if transaction.side == SideEnum.BUY.value)
         current_round.avg_price = current_round.total_amount / current_round.total_qty if current_round.total_qty else None
 
+        current_round.current_profit = current_round.last_price * current_round.total_qty
+        current_round.current_profit = current_round.current_profit - (current_round.current_profit * 0.01)
+        current_round.current_profit = current_round.current_profit - current_round.total_amount
+
         target_percentage = SETTINGS[current_round.symbol]['target_percentage']
         current_round.target_price = current_round.avg_price * (1 - (target_percentage / 100)) if current_round.avg_price else None
 
