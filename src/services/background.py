@@ -55,7 +55,7 @@ async def brackground_worker():
                     trailing_stop_price = current_round.trailing_stop_price
                     if trailing_stop_price and last_price <= trailing_stop_price:
                         response = await binance_service.sell(current_round)
-                        rounds_service.add_transaction(current_round, SideEnum.BUY, response)
+                        rounds_service.add_transaction(current_round, SideEnum.SELL, response)
                         rounds_service.close_round(current_round)
 
                 await asyncio.sleep(0.5)
